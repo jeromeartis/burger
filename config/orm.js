@@ -1,10 +1,35 @@
 // Import MySQL connection.
-const connection = require('../config/connection.js');
+var connection = require("../config/connection.js");
 
+// Helper function for SQL syntax.
+function printQuestionMarks(num) {
+  var arr = [];
 
-const orm = {
+  for (var i = 0; i < num; i++) {
+    arr.push("?");
+  }
+
+  return arr.toString();
+}
+
+// Helper function for SQL syntax.
+function objToSql(ob) {
+  var arr = [];
+
+  for (var key in ob) {
+    if (Object.hasOwnProperty.call(ob, key)) {
+      arr.push(key + "=" + ob[key]);
+    }
+  }
+
+  return arr.toString();
+}
+
+// Object for all our SQL statement functions.
+var orm = {
   all: function(tableInput, cb) {
-    connection.query('SELECT * FROM ??', tableInput, function(err, result) {
+    var queryString = "SELECT * FROM " + tableInput + ";";
+    connection.query(queryString, function(err, result) {
       if (err) {
         throw err;
       }
@@ -12,21 +37,35 @@ const orm = {
     });
   },
   create: function(table, cols, vals, cb) {
-    const queryString = 'INSERT INTO ?? (??) VALUES (?)'
+    var queryString = "INSERT INTO " + table;
 
-    connection.query(queryString, [table, cols, vals], function(err, result) {
+    queryString += " (";
+    queryString += cols.toString();
+    queryString += ") ";
+    queryString += "VALUES (";
+    queryString += printQuestionMarks(vals.length);
+    queryString += ") ";
+
+    console.log(queryString);
+
+    connection.query(queryString, vals, function(err, result) {
       if (err) {
         throw err;
       }
-
       cb(result);
     });
   },
   // An example of objColVals would be {name: panther, sleepy: true}
   update: function(table, objColVals, condition, cb) {
-    const queryString = 'UPDATE ?? SET ? WHERE ?'
+    var queryString = "UPDATE " + table;
 
-    connection.query(queryString, [table, objColVals, condition], function(err, result) {
+    queryString += " SET ";
+    queryString += objToSql(objColVals);
+    queryString += " WHERE ";
+    queryString += condition;
+
+    console.log(queryString);
+    connection.query(queryString, function(err, result) {
       if (err) {
         throw err;
       }
